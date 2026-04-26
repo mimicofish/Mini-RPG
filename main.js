@@ -1,9 +1,14 @@
 
 const container = document.querySelector('#grid');
+
 const cols = 10;
 const row = 10;
 let playerPosition;
 
+// 0 = empty
+// 1 = wall
+// 2 = player start
+// 3 = enemy
 const map = [
     [0,0,0,0,0,0,0,0,0,0],
     [0,0,2,0,0,0,0,0,0,0],
@@ -38,6 +43,7 @@ function renderGrid() {
                 cell.classList.add('enemy');
             }
 
+            //convert 2D position to 1D index
             const index = y * cols + x;
 
             if (index === playerPosition) {
@@ -61,7 +67,8 @@ function findPlayerStart() {
 }
 
 document.addEventListener('keydown', function(event){
-    console.log(event.key);
+    
+    //Pick player position 
     const x = playerPosition % cols;
     const y = Math.floor(playerPosition / cols);
 
@@ -70,18 +77,20 @@ document.addEventListener('keydown', function(event){
         const nextX = x + 1;
         const nextY = y;
 
+        //Cegah keluar batas grid
         if (nextX >= cols) {
             return;
         }
         
+        //check collision with enemy
         if (map[nextY][nextX] === 3) {
             alert('Game Over!');
             return;
         }
 
+        //checking if can walk to next cell (not wall)
         if (
-            nextX < cols && 
-            (map[nextY][nextX] === 0 || map[nextY][nextX] === 2)
+            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
         ) {
             playerPosition += 1;
         }
@@ -100,7 +109,7 @@ document.addEventListener('keydown', function(event){
         }
 
         if (
-            nextX > 0 && map[nextY][nextX] === 0 || nextX > 0 && map[nextY][nextX ] === 2
+            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
         ) {
             playerPosition -= 1;
         }
@@ -119,7 +128,7 @@ document.addEventListener('keydown', function(event){
         }
 
         if (
-            nextY < row - 1 && map[nextY][nextX] === 0 || nextY < row - 1 && map[nextY][nextX] === 2
+            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
         ) {
             playerPosition += cols;
         }
@@ -138,7 +147,7 @@ document.addEventListener('keydown', function(event){
         }
 
         if (
-            nextY > 0 && map[nextY][nextX] === 0 || nextY > 0 && map[nextY][nextX] === 2
+            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
         ) {
             playerPosition -= cols;
         }
@@ -165,14 +174,14 @@ function moveEnemy() {
     const x = enemyPosition % cols;
     const y = Math.floor(enemyPosition / cols);
 
-    const possibleMoves = [
+    const directions = [
         {dx: 1, dy: 0}, // right
         {dx: -1, dy: 0}, // left
         {dx: 0, dy: 1}, // down
         {dx: 0, dy: -1} // up
     ];
 
-    const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+    const randomMove = directions[Math.floor(Math.random() * directions.length)];
 
     const newX = x + randomMove.dx;
     const newY = y + randomMove.dy;
