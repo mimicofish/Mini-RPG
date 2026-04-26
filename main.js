@@ -5,6 +5,8 @@ const cols = 10;
 const row = 10;
 let playerPosition;
 
+let lives = 3;
+
 // 0 = empty
 // 1 = wall
 // 2 = player start
@@ -21,6 +23,8 @@ const map = [
     [0,0,1,1,1,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0]
 ];
+
+const initialMap = JSON.parse(JSON.stringify(map)); // Deep copy of the map
 
 
 findPlayerStart();
@@ -66,6 +70,28 @@ function findPlayerStart() {
     }
 }
 
+function handleHit(){
+    lives--;
+
+    if (lives <= 0) {
+        alert('Game Over!');
+
+        // Reset game
+        for (let y = 0; y < row; y++) {
+            for (let x = 0; x < cols; x++) {
+                map[y][x] = initialMap[y][x]; // Reset map to initial state
+            }   
+        }
+
+        lives = 3; // Reset lives
+    } else {
+        alert(`You got hit! Lives left: ${lives} ❤️`);
+    }
+
+    findPlayerStart(); 
+    renderGrid();
+}
+
 document.addEventListener('keydown', function(event){
     
     //Pick player position 
@@ -84,7 +110,7 @@ document.addEventListener('keydown', function(event){
         
         //check collision with enemy
         if (map[nextY][nextX] === 3) {
-            alert('Game Over!');
+            handleHit();
             return;
         }
 
@@ -104,7 +130,7 @@ document.addEventListener('keydown', function(event){
         }
 
         if (map[nextY][nextX] === 3) {
-            alert('Game Over!');
+            handleHit();
             return;
         }
 
@@ -123,7 +149,7 @@ document.addEventListener('keydown', function(event){
         }
         
         if (map[nextY][nextX] === 3) {
-            alert('Game Over!');
+            handleHit();
             return;
         }
 
@@ -142,7 +168,7 @@ document.addEventListener('keydown', function(event){
         }
 
         if (map[nextY][nextX] === 3) {
-            alert('Game Over!');
+            handleHit();
             return;
         }
 
@@ -157,9 +183,10 @@ document.addEventListener('keydown', function(event){
 });
 
 
-setInterval(moveEnemy, 500);
+setInterval(moveEnemy, 150);
 
 function moveEnemy() {
+
     //cari posisi musuh
     let enemyPosition;
 
@@ -174,35 +201,45 @@ function moveEnemy() {
     const x = enemyPosition % cols;
     const y = Math.floor(enemyPosition / cols);
 
-    const directions = [
-        {dx: 1, dy: 0}, // right
-        {dx: -1, dy: 0}, // left
-        {dx: 0, dy: 1}, // down
-        {dx: 0, dy: -1} // up
-    ];
 
-    const randomMove = directions[Math.floor(Math.random() * directions.length)];
+    const playerX = playerPosition % cols;
+    const playerY = Math.floor(playerPosition / cols);
 
-    const newX = x + randomMove.dx;
-    const newY = y + randomMove.dy;
+    let dx = 0;
+    let dy = 0;
+
+    if (playerX > x) dx = 1;
+    else if (playerX < x) dx = -1;
+
+    if (playerY > y) dy = 1;
+    else if (playerY < y) dy = -1;
+
+    // Randomly decide to move vertically or horizontally
+    if (Math.abs(playerX - x) > Math.abs(playerY - y)) {
+        dy = 0; // Move vertically
+    } else {
+        dx = 0; // Move horizontally
+    }
+    
+    const newX = x + dx;
+    const newY = y + dy;
 
     if (
         newX >= 0 && newX < cols && 
-        newY >= 0 && newY < row && 
-        map[newY][newX] === 0
+        newY >= 0 && newY < row 
     ) {
-        // Update map
-        map[y][x] = 0; // Clear old position
-        map[newY][newX] = 3; // Move enemy to new position
+        const newIndex = newY * cols + newX;
+        if (newIndex === playerPosition) {
+            handleHit();
+            return;
+        }
+
+        if (map[newY][newX] === 0) {
+            // Update map
+            map[y][x] = 0; // Clear old position
+            map[newY][newX] = 3; // Move enemy to new position
+        }
     }
 
-
-    const newIndex = newY * cols + newX;
-    if (newIndex === playerPosition) {
-        alert('Game Over!');
-        // Reset game
-        playerPosition = null;
-        findPlayerStart();
-    }
     renderGrid();
 }
