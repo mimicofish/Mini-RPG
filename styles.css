@@ -22,3 +22,16 @@
 .enemy {
     background-color: rgb(141, 11, 216);
 }
+
+.invisible {
+    animation: blinker 0.3s infinite alternate;
+}
+
+@keyframes blinker {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.3;
+    }
+}

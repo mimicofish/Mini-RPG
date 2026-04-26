@@ -7,11 +7,13 @@ let playerPosition;
 
 let lives = 3;
 
+let isInvisible = false;
+
 // 0 = empty
 // 1 = wall
 // 2 = player start
 // 3 = enemy
-const map = [
+let map = [
     [0,0,0,0,0,0,0,0,0,0],
     [0,0,2,0,0,0,0,0,0,0],
     [0,0,0,0,1,1,1,0,0,0],
@@ -19,9 +21,9 @@ const map = [
     [0,0,0,0,1,0,0,0,0,0],
     [0,0,0,0,1,0,0,0,3,0],
     [0,0,0,0,0,1,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,3,0,0,0,0,0],
     [0,0,1,1,1,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0]
+    [0,0,0,3,0,0,0,0,0,0]
 ];
 
 const initialMap = JSON.parse(JSON.stringify(map)); // Deep copy of the map
@@ -52,6 +54,10 @@ function renderGrid() {
 
             if (index === playerPosition) {
                 cell.classList.add('player');
+
+                if (isInvisible) {
+                    cell.classList.add('invisible');
+                }
             }
 
             container.appendChild(cell);
@@ -70,7 +76,13 @@ function findPlayerStart() {
     }
 }
 
-function handleHit(){
+function handleHit() {
+    if (isInvisible) {
+        return;
+    }
+
+    isInvisible = true;
+
     lives--;
 
     if (lives <= 0) {
@@ -90,6 +102,16 @@ function handleHit(){
 
     findPlayerStart(); 
     renderGrid();
+
+    //Cooldown
+    setTimeout(() => {
+        isInvisible = false;
+    }, 1500); // 1.5 detik invincibility
+}
+
+function updateLivesDisplay() {
+    const livesElement = document.getElementById('lives');
+    livesElement.textContent = `Lives: ${lives} ❤️`;
 }
 
 document.addEventListener('keydown', function(event){
@@ -186,60 +208,69 @@ document.addEventListener('keydown', function(event){
 setInterval(moveEnemy, 150);
 
 function moveEnemy() {
+    const newMap = map.map(row => [...row]); // Deep copy of the map    
 
     //cari posisi musuh
-    let enemyPosition;
+    const enemies = [];
 
     for (let y = 0; y < row; y++) {
         for (let x = 0; x < cols; x++) {
             if (map[y][x] === 3) {
-                enemyPosition = y * cols + x;
+                enemies.push({ x, y });
             }
         }
     }
 
-    const x = enemyPosition % cols;
-    const y = Math.floor(enemyPosition / cols);
+    enemies.forEach(enemy => {
+        const x = enemy.x;
+        const y = enemy.y;
 
 
-    const playerX = playerPosition % cols;
-    const playerY = Math.floor(playerPosition / cols);
+        const playerX = playerPosition % cols;
+        const playerY = Math.floor(playerPosition /     cols);
 
-    let dx = 0;
-    let dy = 0;
+        let dx = 0;
+        let dy = 0;
 
-    if (playerX > x) dx = 1;
-    else if (playerX < x) dx = -1;
+        if (playerX > x) dx = 1;
+        else if (playerX < x) dx = -1;
 
-    if (playerY > y) dy = 1;
-    else if (playerY < y) dy = -1;
+        if (playerY > y) dy = 1;
+        else if (playerY < y) dy = -1;
 
-    // Randomly decide to move vertically or horizontally
-    if (Math.abs(playerX - x) > Math.abs(playerY - y)) {
-        dy = 0; // Move vertically
-    } else {
-        dx = 0; // Move horizontally
-    }
+        // Randomly decide to move vertically or horizontally
+        if (Math.abs(playerX - x) > Math.abs(playerY -  y)) {
+            dy = 0; // Move vertically
+        } else {
+            dx = 0; // Move horizontally
+        }
     
-    const newX = x + dx;
-    const newY = y + dy;
+        const newX = x + dx;
+        const newY = y + dy;
 
-    if (
-        newX >= 0 && newX < cols && 
-        newY >= 0 && newY < row 
-    ) {
-        const newIndex = newY * cols + newX;
-        if (newIndex === playerPosition) {
-            handleHit();
-            return;
-        }
+        if (
+            newX >= 0 && newX < cols && 
+            newY >= 0 && newY < row 
+        ) {
+            const newIndex = newY * cols + newX;
 
-        if (map[newY][newX] === 0) {
-            // Update map
-            map[y][x] = 0; // Clear old position
-            map[newY][newX] = 3; // Move enemy to new position
+            if (newIndex === playerPosition) {
+                handleHit();
+                return;
+            }
+
+            if (
+                map[newY][newX] === 0 && newMap[newY][newX] === 0
+            ) {
+                // Update map
+                newMap[y][x] = 0; // Clear old position
+                newMap[newY][newX] = 3; // Move enemy to new position
+            }
         }
-    }
+    });
+
+    map = newMap; // Update map with new enemy positions    
 
     renderGrid();
+
 }
