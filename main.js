@@ -114,91 +114,50 @@ function updateLivesDisplay() {
     livesElement.textContent = `Lives: ${lives} ❤️`;
 }
 
-document.addEventListener('keydown', function(event){
-    
+function movePlayer(dx, dy) {
+
     //Pick player position 
     const x = playerPosition % cols;
-    const y = Math.floor(playerPosition / cols);
+    const y = Math.floor(playerPosition/cols);
 
+    const nextX = x + dx;
+    const nextY = y + dy;
 
-    if (event.key === 'ArrowRight') {
-        const nextX = x + 1;
-        const nextY = y;
+    if (
+        nextX < 0 ||
+        nextX >= cols ||
+        nextY < 0 ||
+        nextY >= row
+    ) {
+        return;
+    }
 
-        //Cegah keluar batas grid
-        if (nextX >= cols) {
-            return;
-        }
-        
-        //check collision with enemy
-        if (map[nextY][nextX] === 3) {
-            handleHit();
-            return;
-        }
+    if (map[nextY][nextX] === 3) {
+        handleHit();
+        return;
+    }
 
-        //checking if can walk to next cell (not wall)
-        if (
-            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
+    //checking if can walk to next cell (not wall)
+    if (
+        map[nextY][nextX] === 0 || map[nextY][nextX] === 2
         ) {
-            playerPosition += 1;
+            playerPosition += dx + dy * cols;
         }
+}
+
+document.addEventListener('keydown', function(event){
+    
+    if (event.key === 'ArrowRight') {
+        movePlayer(1, 0);
     }
     if (event.key === 'ArrowLeft') {
-        const nextX = x - 1;
-        const nextY = y;
-
-        if (nextX < 0) {
-            return;
-        }
-
-        if (map[nextY][nextX] === 3) {
-            handleHit();
-            return;
-        }
-
-        if (
-            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
-        ) {
-            playerPosition -= 1;
-        }
+        movePlayer(-1, 0);
     }
     if (event.key === 'ArrowDown') {
-        const nextX = x;
-        const nextY = y + 1;
-
-        if (nextY >= row) {
-            return;
-        }
-        
-        if (map[nextY][nextX] === 3) {
-            handleHit();
-            return;
-        }
-
-        if (
-            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
-        ) {
-            playerPosition += cols;
-        }
+        movePlayer(0, 1);
     }
     if (event.key === 'ArrowUp') {
-        const nextX = x;
-        const nextY = y - 1;
-
-        if (nextY < 0) {
-            return;
-        }
-
-        if (map[nextY][nextX] === 3) {
-            handleHit();
-            return;
-        }
-
-        if (
-            map[nextY][nextX] === 0 || map[nextY][nextX] === 2
-        ) {
-            playerPosition -= cols;
-        }
+        movePlayer(0, -1);
     }
 
     renderGrid();
